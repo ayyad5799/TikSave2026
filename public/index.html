@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>TikSave Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070810;--s1:#0c0e1a;--s2:#111422;--s3:#181c2e;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
+  --tk:#fe2c55;--tk2:#ff6b35;
+  --drop:#0061ff;--drop2:#60efff;
+  --ok:#00e5a0;--warn:#ffc947;--err:#ff4757;
+  --text:#eef0ff;--muted:#5a607a;--muted2:#8891aa;
+  --r:16px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'Cairo',sans-serif;min-height:100vh;
+  overflow-x:hidden;
+}
+/* noise */
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  opacity:.5;
+}
+.blob{position:fixed;border-radius:50%;filter:blur(130px);pointer-events:none;z-index:0;}
+.b1{width:550px;height:550px;background:rgba(254,44,85,.065);top:-120px;right:-120px;}
+.b2{width:450px;height:450px;background:rgba(0,97,255,.055);bottom:-100px;left:-100px;}
+
+.wrap{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:32px 18px 80px;}
+
+/* ── nav ── */
+nav{
+  display:flex;align-items:center;justify-content:space-between;
+  padding-bottom:22px;margin-bottom:44px;
+  border-bottom:1px solid var(--border);
+}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-icon{
+  width:38px;height:38px;border-radius:11px;
+  background:linear-gradient(135deg,var(--tk),var(--tk2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;box-shadow:0 0 22px rgba(254,44,85,.3);
+}
+.logo-name{
+  font-size:1.3rem;font-weight:900;letter-spacing:-.5px;
+  background:linear-gradient(120deg,var(--tk),var(--tk2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.logo-name sup{
+  font-size:.55rem;font-weight:700;letter-spacing:.1em;
+  -webkit-text-fill-color:var(--muted2);color:var(--muted2);
+  text-transform:uppercase;margin-right:3px;
+}
+.btn-cfg{
+  display:flex;align-items:center;gap:6px;
+  padding:9px 18px;border-radius:11px;
+  background:var(--s2);border:1px solid var(--border2);
+  color:var(--muted2);font-size:.82rem;font-weight:700;
+  cursor:pointer;font-family:'Cairo',sans-serif;
+  transition:all .2s;position:relative;
+}
+.btn-cfg:hover{background:var(--s3);color:var(--text);}
+.cfg-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--muted);position:absolute;
+  top:8px;left:8px;transition:background .3s;
+}
+.cfg-dot.ready{background:var(--ok);box-shadow:0 0 6px var(--ok);}
+.cfg-dot.partial{background:var(--warn);}
+
+/* ── hero ── */
+.hero{text-align:center;margin-bottom:40px;animation:fd .5s ease;}
+.hero h1{
+  font-size:clamp(1.7rem,4.5vw,2.7rem);font-weight:900;
+  line-height:1.22;margin-bottom:10px;
+}
+.hero h1 em{
+  font-style:normal;
+  background:linear-gradient(90deg,var(--tk),var(--tk2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hero p{color:var(--muted2);font-size:.92rem;line-height:1.75;font-weight:300;}
+.chips{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;margin-top:14px;}
+.chip{
+  padding:4px 12px;border-radius:20px;font-size:.73rem;
+  border:1px solid var(--border2);background:var(--s2);color:var(--muted2);
+}
+.chip b{color:var(--ok);}
+
+/* ── notice ── */
+.notice{
+  display:none;
+  background:rgba(255,201,71,.06);border:1px solid rgba(255,201,71,.22);
+  border-radius:var(--r);padding:14px 18px;
+  font-size:.8rem;color:var(--muted2);line-height:1.7;
+  margin-bottom:14px;animation:fu .3s ease;
+}
+.notice.show{display:flex;align-items:center;gap:10px;}
+.notice strong{color:var(--warn);}
+
+/* ── card ── */
+.card{
+  background:var(--s1);border:1px solid var(--border);
+  border-radius:20px;padding:24px;margin-bottom:14px;
+  transition:border-color .3s;
+}
+.card:hover{border-color:var(--border2);}
+.card-title{
+  font-size:.72rem;font-weight:800;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted);
+  margin-bottom:14px;display:flex;align-items:center;gap:6px;
+}
+
+/* ── inputs ── */
+.row{display:flex;gap:10px;flex-wrap:wrap;}
+.field{
+  flex:1;min-width:200px;
+  background:var(--s2);border:1px solid var(--border2);
+  color:var(--text);padding:12px 15px;border-radius:12px;
+  font-size:.88rem;font-family:'Cairo',sans-serif;outline:none;
+  transition:border-color .2s,box-shadow .2s;direction:ltr;
+}
+.field:focus{border-color:var(--tk);box-shadow:0 0 0 3px rgba(254,44,85,.12);}
+.field::placeholder{color:var(--muted);}
+.field.err{border-color:var(--tk)!important;animation:shake .3s ease;}
+
+/* ── buttons ── */
+.btn{
+  padding:12px 20px;border-radius:12px;font-weight:700;
+  font-size:.87rem;cursor:pointer;border:none;
+  font-family:'Cairo',sans-serif;transition:all .2s;
+  display:inline-flex;align-items:center;gap:7px;white-space:nowrap;
+}
+.btn-main{
+  background:linear-gradient(135deg,var(--tk),#c01c3e);color:#fff;
+  box-shadow:0 4px 22px rgba(254,44,85,.35);
+}
+.btn-main:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 28px rgba(254,44,85,.5);}
+.btn-main:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+.btn-ghost{background:transparent;color:var(--muted2);border:1px solid var(--border2);}
+.btn-ghost:hover{color:var(--text);border-color:rgba(255,255,255,.25);}
+.btn-sm{padding:9px 16px;font-size:.8rem;border-radius:10px;}
+.btn-icon{padding:11px;border-radius:10px;}
+
+/* ── overlay / settings modal ── */
+.overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.75);
+  backdrop-filter:blur(8px);z-index:200;
+  display:none;align-items:flex-start;justify-content:center;
+  padding:30px 16px;overflow-y:auto;
+}
+.overlay.open{display:flex;animation:fadeIn .2s ease;}
+.panel{
+  background:var(--s1);border:1px solid var(--border2);
+  border-radius:24px;padding:34px;
+  width:min(580px,100%);position:relative;
+  animation:slideUp .25s ease;margin:auto;
+}
+.panel-close{
+  position:absolute;top:18px;left:18px;
+  background:var(--s3);border:1px solid var(--border);
+  border-radius:9px;width:32px;height:32px;cursor:pointer;
+  color:var(--muted2);font-size:1rem;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .2s;
+}
+.panel-close:hover{color:var(--text);}
+.panel h2{font-size:1.15rem;font-weight:900;margin-bottom:4px;}
+.panel .sub{font-size:.8rem;color:var(--muted2);margin-bottom:28px;line-height:1.65;}
+
+/* accordion sections */
+.acc{
+  border:1px solid var(--border);border-radius:14px;
+  margin-bottom:10px;overflow:hidden;
+}
+.acc-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;cursor:pointer;
+  background:var(--s2);user-select:none;
+  transition:background .2s;
+}
+.acc-head:hover{background:var(--s3);}
+.acc-head-left{display:flex;align-items:center;gap:10px;font-weight:700;font-size:.88rem;}
+.acc-badge{
+  font-size:.68rem;padding:3px 9px;border-radius:20px;font-weight:700;
+}
+.acc-badge.ok {background:rgba(0,229,160,.12);color:var(--ok);border:1px solid rgba(0,229,160,.2);}
+.acc-badge.bad{background:rgba(254,44,85,.12);color:var(--tk);border:1px solid rgba(254,44,85,.25);}
+.acc-badge.na {background:rgba(90,96,122,.15);color:var(--muted2);border:1px solid var(--border);}
+.acc-arrow{
+  width:22px;height:22px;background:var(--s3);border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:.75rem;color:var(--muted2);
+  transition:transform .25s;
+}
+.acc.open .acc-arrow{transform:rotate(180deg);}
+.acc-body{
+  padding:0 18px;max-height:0;overflow:hidden;
+  transition:max-height .3s ease,padding .3s;
+}
+.acc.open .acc-body{max-height:600px;padding:18px 18px 20px;}
+
+.fg{margin-bottom:16px;}
+.flabel{
+  font-size:.75rem;font-weight:700;color:var(--muted2);
+  margin-bottom:6px;display:flex;align-items:center;
+  justify-content:space-between;
+}
+.flabel a{color:var(--drop);font-size:.7rem;text-decoration:none;}
+.flabel a:hover{text-decoration:underline;}
+.hint{
+  font-size:.72rem;color:var(--muted);margin-top:6px;
+  padding:8px 12px;background:rgba(255,255,255,.03);
+  border-radius:8px;border-right:3px solid var(--border2);
+  line-height:1.55;
+}
+.hint code{
+  background:rgba(255,255,255,.07);padding:1px 5px;
+  border-radius:4px;font-family:'JetBrains Mono',monospace;
+  font-size:.78em;direction:ltr;display:inline-block;
+}
+
+/* slider */
+.slider-wrap{display:flex;align-items:center;gap:12px;}
+.slider{
+  flex:1;-webkit-appearance:none;appearance:none;
+  height:5px;border-radius:99px;outline:none;
+  background:var(--s3);cursor:pointer;
+}
+.slider::-webkit-slider-thumb{
+  -webkit-appearance:none;appearance:none;
+  width:18px;height:18px;border-radius:50%;
+  background:var(--tk);border:2px solid #fff2;
+  box-shadow:0 0 10px rgba(254,44,85,.4);
+  cursor:pointer;transition:transform .15s;
+}
+.slider::-webkit-slider-thumb:hover{transform:scale(1.2);}
+.slider-val{
+  font-family:'JetBrains Mono',monospace;font-size:.9rem;
+  color:var(--tk);font-weight:700;min-width:46px;text-align:center;
+}
+
+/* keys list */
+.keys-area{
+  width:100%;background:var(--s3);border:1px solid var(--border2);
+  color:var(--text);padding:10px 12px;border-radius:10px;
+  font-size:.78rem;font-family:'JetBrains Mono',monospace;
+  resize:vertical;min-height:70px;outline:none;direction:ltr;
+  transition:border-color .2s;
+}
+.keys-area:focus{border-color:var(--tk);}
+.keys-note{font-size:.7rem;color:var(--muted);margin-top:5px;}
+
+.save-row{display:flex;justify-content:flex-end;gap:9px;margin-top:22px;padding-top:18px;border-top:1px solid var(--border);}
+
+/* ── progress ── */
+.prog-wrap{display:none;}
+.prog-wrap.show{display:block;animation:fu .3s ease;}
+.prog-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.prog-lbl{font-size:.88rem;font-weight:700;display:flex;align-items:center;gap:8px;}
+.spinner{
+  width:15px;height:15px;border-radius:50%;
+  border:2px solid var(--border2);border-top-color:var(--tk);
+  animation:spin .75s linear infinite;display:inline-block;flex-shrink:0;
+}
+.prog-frac{font-family:'JetBrains Mono',monospace;font-size:.82rem;color:var(--drop2);}
+.bar{background:var(--s3);border-radius:99px;height:6px;overflow:hidden;margin-bottom:16px;}
+.bar-fill{
+  height:100%;border-radius:99px;
+  background:linear-gradient(90deg,var(--tk),var(--tk2));
+  transition:width .6s ease;width:0%;
+}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px;}
+.stat{background:var(--s2);border-radius:12px;padding:11px;text-align:center;}
+.stat-n{font-family:'JetBrains Mono',monospace;font-size:1.45rem;font-weight:700;}
+.stat-n.blue{color:var(--drop2);}
+.stat-n.green{color:var(--ok);}
+.stat-n.red{color:var(--tk);}
+.stat-l{font-size:.68rem;color:var(--muted2);margin-top:1px;}
+.cur{
+  font-size:.75rem;color:var(--muted2);padding:8px 12px;
+  background:var(--s2);border-radius:9px;display:none;
+  font-family:'JetBrains Mono',monospace;direction:ltr;text-align:left;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.cur.show{display:block;}
+
+/* ── log ── */
+.log-wrap{display:none;animation:fu .3s ease;}
+.log-wrap.show{display:block;}
+.log-head{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 16px;border-bottom:1px solid var(--border);
+  font-size:.73rem;color:var(--muted);
+}
+.log-body{
+  padding:14px 16px;font-family:'JetBrains Mono',monospace;
+  font-size:.7rem;line-height:1.9;max-height:230px;overflow-y:auto;
+  color:var(--muted2);direction:ltr;text-align:left;
+}
+.log-body::-webkit-scrollbar{width:3px;}
+.log-body::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px;}
+.ll.s{color:var(--ok);}
+.ll.e{color:var(--err);}
+.ll.i{color:var(--drop2);}
+.ll.w{color:var(--warn);}
+
+/* ── done banner ── */
+.done{
+  display:none;background:linear-gradient(135deg,rgba(0,229,160,.07),rgba(0,229,160,.03));
+  border:1px solid rgba(0,229,160,.22);border-radius:16px;
+  padding:20px 24px;align-items:center;gap:16px;
+  animation:fu .4s ease;margin-top:14px;
+}
+.done.show{display:flex;}
+.done-icon{font-size:2rem;flex-shrink:0;}
+.done-text h3{font-size:.98rem;color:var(--ok);margin-bottom:3px;}
+.done-text p{font-size:.78rem;color:var(--muted2);}
+
+/* ── animations ── */
+@keyframes fd{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+</style>
+</head>
+<body>
+<div class="blob b1"></div>
+<div class="blob b2"></div>
+
+<!-- ══ SETTINGS OVERLAY ══ -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeCfg()">
+<div class="panel">
+  <button class="panel-close" onclick="closeCfg()">✕</button>
+  <h2>⚙️ الإعدادات</h2>
+  <p class="sub">المفاتيح محفوظة في المتصفح محلياً على جهازك فقط.</p>
+
+  <!-- RapidAPI -->
+  <div class="acc open" id="acc-rapid">
+    <div class="acc-head" onclick="toggleAcc('acc-rapid')">
+      <div class="acc-head-left">🔑 مفاتيح RapidAPI <span class="acc-badge na" id="badgeRapid">غير محفوظ</span></div>
+      <div class="acc-arrow">▾</div>
+    </div>
+    <div class="acc-body">
+      <div class="fg">
+        <div class="flabel">
+          المفتاح الرئيسي (X-RapidAPI-Key)
+          <a href="https://rapidapi.com/tikhub-tikhub-default/api/tiktok-video-no-watermark2" target="_blank">احصل عليه ↗</a>
+        </div>
+        <input class="field" type="password" id="cfg_mainkey" placeholder="acac63fc…cff4" style="width:100%;min-width:unset;">
+        <div class="hint">RapidAPI → My Apps → Default App → X-RapidAPI-Key</div>
+      </div>
+      <div class="fg">
+        <div class="flabel">مفاتيح إضافية (اختياري — كل مفتاح في سطر)</div>
+        <textarea class="keys-area" id="cfg_extrakeys" placeholder="key2&#10;key3" rows="3"></textarea>
+        <div class="keys-note">كل مفتاح بيبدي بـ 500 request/شهر مجاناً ← 10 مفاتيح = 5000/شهر</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dropbox -->
+  <div class="acc open" id="acc-drop">
+    <div class="acc-head" onclick="toggleAcc('acc-drop')">
+      <div class="acc-head-left">📦 إعدادات Dropbox <span class="acc-badge na" id="badgeDrop">غير متصل</span></div>
+      <div class="acc-arrow">▾</div>
+    </div>
+    <div class="acc-body">
+      <div class="fg">
+        <div class="flabel">
+          App Key (Client ID)
+          <a href="https://www.dropbox.com/developers/apps" target="_blank">أنشئ App ↗</a>
+        </div>
+        <input class="field" type="text" id="cfg_appkey" placeholder="jyu5031v2rkzfr4" style="width:100%;min-width:unset;" dir="ltr">
+        <div class="hint">Dropbox App Console → Settings → App key</div>
+      </div>
+      <div class="fg">
+        <div class="flabel">App Secret (Client Secret)</div>
+        <input class="field" type="password" id="cfg_appsecret" placeholder="ni1uvt1l…z3cw" style="width:100%;min-width:unset;">
+        <div class="hint">Dropbox App Console → Settings → App secret</div>
+      </div>
+      <div class="fg">
+        <div class="flabel">Refresh Token الدائم</div>
+        <input class="field" type="password" id="cfg_refresh" placeholder="sl.u.AGa***-v6A" style="width:100%;min-width:unset;">
+        <div class="hint">
+          اضغط زر <strong>"إنشاء Refresh Token تلقائياً"</strong> في الأسفل بعد ملء App Key و App Secret.
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="generateRefreshToken()" style="width:100%;justify-content:center;margin-bottom:16px;">
+        🔑 إنشاء Refresh Token تلقائياً
+      </button>
+      <div class="fg">
+        <div class="flabel">مجلد الحفظ</div>
+        <input class="field" type="text" id="cfg_folder" value="/videos" style="width:100%;min-width:unset;" dir="ltr">
+        <div class="hint">المجلد اللي هتتحفظ فيه الفيديوهات على Dropbox</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Duration filter -->
+  <div class="acc open" id="acc-dur">
+    <div class="acc-head" onclick="toggleAcc('acc-dur')">
+      <div class="acc-head-left">⏱️ فلتر المدة <span class="acc-badge ok" id="badgeDur">شغال</span></div>
+      <div class="acc-arrow">▾</div>
+    </div>
+    <div class="acc-body">
+      <div class="flabel">الحد الأقصى للمدة (ثانية)</div>
+      <div class="slider-wrap" style="margin-bottom:6px;">
+        <input class="slider" type="range" id="cfg_dur" min="10" max="600" value="120"
+          oninput="document.getElementById('durVal').textContent=this.value+'s'">
+        <div class="slider-val" id="durVal">120s</div>
+      </div>
+      <div class="hint">الإعداد الحالي: أقل من <strong id="durHint">5 دقائق و0 ثانية</strong> — الفيديوهات الأطول بيتم تخطيها تلقائياً</div>
+    </div>
+  </div>
+
+  <div class="save-row">
+    <button class="btn btn-ghost btn-sm" onclick="closeCfg()">إلغاء</button>
+    <button class="btn btn-main btn-sm" onclick="saveSettings()">💾 حفظ جميع الإعدادات</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ MAIN ══ -->
+<div class="wrap">
+  <nav>
+    <div class="logo">
+      <div class="logo-icon">🎵</div>
+      <div class="logo-name">TikSave<sup>Pro</sup></div>
+    </div>
+    <button class="btn-cfg" onclick="openCfg()">
+      <div class="cfg-dot" id="cfgDot"></div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      الإعدادات
+    </button>
+  </nav>
+
+  <div class="hero">
+    <h1>حمّل فيديوهاتك من<br><em>TikTok</em> إلى Dropbox</h1>
+    <p>أدخل رابط بروفايلك — يجلب كل فيديوهاتك القصيرة<br>بدون علامة مائية ويرفعها مباشرة على Dropbox.</p>
+    <div class="chips">
+      <div class="chip"><b>✓</b> بدون علامة مائية</div>
+      <div class="chip"><b>✓</b> فلتر مدة تلقائي</div>
+      <div class="chip"><b>✓</b> رفع مباشر Dropbox</div>
+      <div class="chip"><b>✓</b> يشتغل على Vercel</div>
+    </div>
+  </div>
+
+  <!-- missing keys notice -->
+  <div class="notice" id="notice">
+    <span>⚠️</span>
+    <span><strong>الإعدادات ناقصة</strong> — اضغط "الإعدادات" وأدخل مفاتيح RapidAPI وبيانات Dropbox.</span>
+  </div>
+
+  <!-- URL input -->
+  <div class="card" style="animation:fu .4s ease .1s both;">
+    <div class="card-title">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+      رابط البروفايل
+    </div>
+    <div class="row">
+      <input class="field" type="text" id="profileUrl"
+        placeholder="https://www.tiktok.com/@yourusername">
+      <button class="btn btn-main" id="startBtn" onclick="startProcess()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        ابدأ
+      </button>
+      <button class="btn btn-ghost" id="stopBtn" onclick="stopProcess()" style="display:none;">
+        ⏹ إيقاف
+      </button>
+    </div>
+  </div>
+
+  <!-- Progress -->
+  <div class="card prog-wrap" id="progCard">
+    <div class="prog-top">
+      <div class="prog-lbl"><div class="spinner"></div><span id="progLbl">جاري المعالجة…</span></div>
+      <div class="prog-frac"><span id="doneN">0</span> / <span id="totalN">0</span></div>
+    </div>
+    <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+    <div class="stats">
+      <div class="stat"><div class="stat-n blue"  id="sTotal">0</div><div class="stat-l">إجمالي</div></div>
+      <div class="stat"><div class="stat-n green" id="sUp">0</div><div class="stat-l">رُفع ✓</div></div>
+      <div class="stat"><div class="stat-n red"   id="sSkip">0</div><div class="stat-l">تخطّي ✗</div></div>
+    </div>
+    <div class="cur" id="curFile"></div>
+  </div>
+
+  <!-- Log -->
+  <div class="card log-wrap" id="logCard">
+    <div class="log-head">
+      <span>📋 السجل</span>
+      <span id="logCnt" style="font-family:'JetBrains Mono',monospace;font-size:.72rem;">0</span>
+    </div>
+    <div class="log-body" id="logBody"></div>
+  </div>
+
+  <!-- Done -->
+  <div class="done" id="doneEl">
+    <div class="done-icon">🎉</div>
+    <div class="done-text">
+      <h3>اكتملت العملية!</h3>
+      <p id="doneMsg"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════
+   CONFIG  (localStorage)
+═══════════════════════════ */
+const KEY = 'tiksave_v2';
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)||'{}'); }catch{ return {}; } }
+function save(o){ localStorage.setItem(KEY, JSON.stringify(o)); }
+
+function openCfg(){
+  const c = load();
+  document.getElementById('cfg_mainkey').value   = c.mainKey   || '';
+  document.getElementById('cfg_extrakeys').value = (c.extraKeys||[]).join('\n');
+  document.getElementById('cfg_appkey').value    = c.appKey    || '';
+  document.getElementById('cfg_appsecret').value = c.appSecret || '';
+  document.getElementById('cfg_refresh').value   = c.refresh   || '';
+  document.getElementById('cfg_folder').value    = c.folder    || '/videos';
+  const dur = c.maxDur || 120;
+  document.getElementById('cfg_dur').value = dur;
+  document.getElementById('durVal').textContent = dur + 's';
+  updateDurHint(dur);
+  updateBadges(c);
+  document.getElementById('overlay').classList.add('open');
+}
+function closeCfg(){ document.getElementById('overlay').classList.remove('open'); }
+
+function saveSettings(){
+  const c = {
+    mainKey:   document.getElementById('cfg_mainkey').value.trim(),
+    extraKeys: document.getElementById('cfg_extrakeys').value.trim()
+                  .split('\n').map(s=>s.trim()).filter(Boolean),
+    appKey:    document.getElementById('cfg_appkey').value.trim(),
+    appSecret: document.getElementById('cfg_appsecret').value.trim(),
+    refresh:   document.getElementById('cfg_refresh').value.trim(),
+    folder:    document.getElementById('cfg_folder').value.trim() || '/videos',
+    maxDur:    parseInt(document.getElementById('cfg_dur').value) || 120,
+  };
+  save(c);
+  updateBadges(c);
+  updateNavDot(c);
+  checkNotice(c);
+  closeCfg();
+}
+
+function updateBadges(c){
+  const rb = document.getElementById('badgeRapid');
+  const db = document.getElementById('badgeDrop');
+  rb.className = 'acc-badge ' + (c.mainKey ? 'ok' : 'bad');
+  rb.textContent = c.mainKey ? '✓ محفوظ' : 'غير محفوظ';
+  const dropOk = c.appKey && c.appSecret && c.refresh;
+  db.className = 'acc-badge ' + (dropOk ? 'ok' : 'bad');
+  db.textContent = dropOk ? '✓ متصل' : 'غير متصل';
+}
+function updateNavDot(c){
+  const dot = document.getElementById('cfgDot');
+  const ok = c.mainKey && c.appKey && c.appSecret && c.refresh;
+  const partial = c.mainKey || c.appKey;
+  dot.className = 'cfg-dot ' + (ok ? 'ready' : partial ? 'partial' : '');
+}
+function checkNotice(c){
+  const ok = c.mainKey && c.appKey && c.appSecret && c.refresh;
+  document.getElementById('notice').classList.toggle('show', !ok);
+}
+function updateDurHint(s){
+  s = parseInt(s);
+  const m = Math.floor(s/60), sec = s%60;
+  document.getElementById('durHint').textContent = `${m} دقيقة${sec?` و${sec} ثانية`:''}`;
+}
+
+// accordion
+function toggleAcc(id){
+  document.getElementById(id).classList.toggle('open');
+}
+
+// slider live update
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('cfg_dur').addEventListener('input', function(){
+    document.getElementById('durVal').textContent = this.value + 's';
+    updateDurHint(this.value);
+  });
+  const c = load();
+  updateNavDot(c);
+  checkNotice(c);
+  if(c.maxDur){
+    document.getElementById('cfg_dur').value = c.maxDur;
+    document.getElementById('durVal').textContent = c.maxDur + 's';
+    updateDurHint(c.maxDur);
+  }
+});
+
+/* ═══════════════════════════
+   REFRESH TOKEN FLOW
+═══════════════════════════ */
+async function generateRefreshToken(){
+  const appKey    = document.getElementById('cfg_appkey').value.trim();
+  const appSecret = document.getElementById('cfg_appsecret').value.trim();
+  if(!appKey || !appSecret){
+    alert('أدخل App Key و App Secret أولاً');
+    return;
+  }
+  // Step 1: open Dropbox auth page
+  const redirectUri = window.location.origin + '/auth-callback';
+  const authUrl = `https://www.dropbox.com/oauth2/authorize?response_type=code&client_id=${appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&token_access_type=offline`;
+  
+  const code = prompt(
+    `سيتم فتح صفحة Dropbox للمصادقة.\n\n` +
+    `بعد الموافقة، انسخ الكود من الرابط (code=XXXX) وألصقه هنا:\n\n` +
+    `رابط المصادقة:\n${authUrl}\n\n` +
+    `(افتحه يدوياً إذا لم يفتح تلقائياً)`,
+    ''
+  );
+  window.open(authUrl, '_blank');
+  
+  if(!code || !code.trim()){
+    alert('تم إلغاء العملية');
+    return;
+  }
+
+  try{
+    // Exchange code for refresh token via our serverless function
+    const resp = await fetch('/api/token', {
+      method: 'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ app_key: appKey, app_secret: appSecret, code: code.trim(), redirect_uri: redirectUri })
+    });
+    const data = await resp.json();
+    if(data.refresh_token){
+      document.getElementById('cfg_refresh').value = data.refresh_token;
+      alert('✅ تم الحصول على Refresh Token بنجاح!');
+    } else {
+      alert('خطأ: ' + (data.error || JSON.stringify(data)));
+    }
+  } catch(e){
+    alert('خطأ: ' + e.message);
+  }
+}
+
+/* ═══════════════════════════
+   STATE & HELPERS
+═══════════════════════════ */
+let running = false, stop = false;
+let keyIndex = 0;
+let allKeys = [];
+
+function getKey(){
+  if(!allKeys.length) return null;
+  const k = allKeys[keyIndex % allKeys.length];
+  keyIndex++;
+  return k;
+}
+
+function log(msg, cls=''){
+  const body = document.getElementById('logBody');
+  const d = document.createElement('div');
+  d.className = 'll ' + cls;
+  d.textContent = msg;
+  body.appendChild(d);
+  body.scrollTop = body.scrollHeight;
+  document.getElementById('logCnt').textContent = body.children.length;
+}
+function resetLog(){
+  document.getElementById('logBody').innerHTML = '';
+  document.getElementById('logCnt').textContent = '0';
+}
+function extractUsername(url){
+  const m = url.match(/@([\w.]+)/);
+  return m ? m[1] : url.replace(/.*tiktok\.com\//,'').replace(/\//,'');
+}
+
+/* ═══════════════════════════
+   API CALLS
+═══════════════════════════ */
+async function fetchPage(username, cursor){
+  const key = getKey();
+  const r = await fetch(`/api/profile?username=${encodeURIComponent(username)}&rapid_key=${encodeURIComponent(key)}&max_dur=${load().maxDur||120}&cursor=${cursor}`);
+  const d = await r.json();
+  if(d.error) throw new Error(d.error);
+  return d;  // { videos, has_more, cursor }
+}
+
+async function getDownloadUrl(videoId){
+  const key = getKey();
+  const r = await fetch(`/api/download?video_id=${videoId}&rapid_key=${encodeURIComponent(key)}`);
+  const d = await r.json();
+  if(d.error) throw new Error(d.error);
+  return d.url;
+}
+
+async function uploadVideo(videoUrl, filename){
+  const c = load();
+  const r = await fetch('/api/upload', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      video_url:     videoUrl,
+      filename,
+      drop_folder:   c.folder    || '/videos',
+      app_key:       c.appKey    || '',
+      app_secret:    c.appSecret || '',
+      refresh_token: c.refresh   || '',
+    })
+  });
+  const d = await r.json();
+  if(d.error) throw new Error(d.error);
+  return d;
+}
+
+/* ═══════════════════════════
+   MAIN PROCESS
+═══════════════════════════ */
+async function startProcess(){
+  const c = load();
+  if(!c.mainKey || !c.appKey || !c.appSecret || !c.refresh){
+    openCfg(); return;
+  }
+  const urlVal = document.getElementById('profileUrl').value.trim();
+  if(!urlVal.includes('tiktok')){
+    const f = document.getElementById('profileUrl');
+    f.classList.add('err');
+    setTimeout(()=>f.classList.remove('err'),600);
+    return;
+  }
+
+  // build key pool
+  allKeys = [c.mainKey, ...(c.extraKeys||[])].filter(Boolean);
+  keyIndex = 0;
+
+  running = true; stop = false;
+  resetLog();
+  document.getElementById('startBtn').disabled = true;
+  document.getElementById('stopBtn').style.display = 'inline-flex';
+  document.getElementById('progCard').classList.add('show');
+  document.getElementById('logCard').classList.add('show');
+  document.getElementById('doneEl').classList.remove('show');
+  document.getElementById('barFill').style.width = '0%';
+  document.getElementById('sTotal').textContent =
+  document.getElementById('sUp').textContent   =
+  document.getElementById('sSkip').textContent = '0';
+  document.getElementById('doneN').textContent  =
+  document.getElementById('totalN').textContent = '0';
+
+  const username = extractUsername(urlVal);
+  log(`👤 بروفايل: @${username}`, 'i');
+
+  try{
+    // 1. جمع كل الفيديوهات
+    const videos = [];
+    let cursor=0, hasMore=true, page=0;
+    while(hasMore && !stop){
+      page++;
+      log(`  صفحة ${page} (cursor=${cursor})…`);
+      const res = await fetchPage(username, cursor);
+      videos.push(...res.videos);
+      hasMore = res.has_more;
+      cursor  = res.cursor;
+      if(page>=50) break;
+    }
+    log(`📋 ${videos.length} فيديو مناسب (≤${c.maxDur||120}ث)`, 's');
+
+    if(!videos.length){ finish(0,0); return; }
+
+    document.getElementById('sTotal').textContent  =
+    document.getElementById('totalN').textContent  = videos.length;
+
+    let up=0, sk=0;
+    for(let i=0;i<videos.length;i++){
+      if(stop){ log('⏹ تم الإيقاف.','w'); break; }
+      const v = videos[i];
+      const lbl = `[${i+1}/${videos.length}] ${v.title.slice(0,55)}`;
+      const cf = document.getElementById('curFile');
+      cf.textContent = lbl; cf.classList.add('show');
+      document.getElementById('progLbl').textContent = `جاري المعالجة… (${i+1}/${videos.length})`;
+      log(`⬇️  ${lbl}`, 'i');
+
+      try{
+        const dlUrl  = await getDownloadUrl(v.id);
+        await uploadVideo(dlUrl, `${v.id}.mp4`);
+        up++;
+        log(`  ☁️  رُفع: ${v.id}.mp4`, 's');
+        document.getElementById('sUp').textContent = up;
+      } catch(e){
+        sk++;
+        log(`  ❌ فشل: ${e.message}`, 'e');
+        document.getElementById('sSkip').textContent = sk;
+      }
+
+      const pct = Math.round(((i+1)/videos.length)*100);
+      document.getElementById('barFill').style.width = pct+'%';
+      document.getElementById('doneN').textContent = i+1;
+    }
+    finish(up, sk);
+
+  } catch(e){
+    log(`💥 ${e.message}`, 'e');
+    finish(0,0);
+  }
+}
+
+function finish(up, sk){
+  running = false;
+  document.getElementById('startBtn').disabled = false;
+  document.getElementById('stopBtn').style.display = 'none';
+  document.getElementById('progLbl').textContent = 'اكتملت العملية';
+  document.getElementById('curFile').classList.remove('show');
+  document.getElementById('barFill').style.width = '100%';
+  const b = document.getElementById('doneEl');
+  b.classList.add('show');
+  document.getElementById('doneMsg').textContent =
+    `رُفع ${up} فيديو بنجاح إلى Dropbox${sk?' | تخطّي '+sk+' فيديو':''}`;
+  log(`\n🎉 انتهى! رُفع: ${up} | تخطّي: ${sk}`, 's');
+}
+
+function stopProcess(){
+  stop=true;
+  log('⏹ طلب إيقاف…','w');
+}
+</script>
+</body>
+</html>
