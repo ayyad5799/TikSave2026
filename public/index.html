@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>TikSave Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070810;--s1:#0c0e1a;--s2:#111422;--s3:#181c2e;
+  --b1:rgba(255,255,255,.07);--b2:rgba(255,255,255,.13);
+  --tk:#fe2c55;--tk2:#ff6b35;
+  --drop:#0061ff;--drop2:#60efff;
+  --ok:#00e5a0;--warn:#ffc947;--err:#ff4757;
+  --text:#eef0ff;--muted:#5a607a;--muted2:#8891aa;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Cairo',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");opacity:.5;}
+.blob{position:fixed;border-radius:50%;filter:blur(130px);pointer-events:none;z-index:0;}
+.b1{width:550px;height:550px;background:rgba(254,44,85,.065);top:-120px;right:-120px;}
+.b2{width:450px;height:450px;background:rgba(0,97,255,.055);bottom:-100px;left:-100px;}
+.wrap{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:32px 18px 80px;}
+
+/* nav */
+nav{display:flex;align-items:center;justify-content:space-between;padding-bottom:22px;margin-bottom:44px;border-bottom:1px solid var(--b1);}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-icon{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,var(--tk),var(--tk2));display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 22px rgba(254,44,85,.3);}
+.logo-name{font-size:1.3rem;font-weight:900;letter-spacing:-.5px;background:linear-gradient(120deg,var(--tk),var(--tk2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.logo-name sup{font-size:.55rem;font-weight:700;letter-spacing:.1em;-webkit-text-fill-color:var(--muted2);color:var(--muted2);text-transform:uppercase;margin-right:3px;}
+.btn-cfg{display:flex;align-items:center;gap:6px;padding:9px 18px;border-radius:11px;background:var(--s2);border:1px solid var(--b2);color:var(--muted2);font-size:.82rem;font-weight:700;cursor:pointer;font-family:'Cairo',sans-serif;transition:all .2s;position:relative;}
+.btn-cfg:hover{background:var(--s3);color:var(--text);}
+.cfg-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);position:absolute;top:8px;left:8px;transition:background .3s;}
+.cfg-dot.ready{background:var(--ok);box-shadow:0 0 6px var(--ok);}
+.cfg-dot.partial{background:var(--warn);}
+
+/* hero */
+.hero{text-align:center;margin-bottom:40px;animation:fd .5s ease;}
+.hero h1{font-size:clamp(1.7rem,4.5vw,2.7rem);font-weight:900;line-height:1.22;margin-bottom:10px;}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,var(--tk),var(--tk2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.hero p{color:var(--muted2);font-size:.92rem;line-height:1.75;font-weight:300;}
+.chips{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;margin-top:14px;}
+.chip{padding:4px 12px;border-radius:20px;font-size:.73rem;border:1px solid var(--b2);background:var(--s2);color:var(--muted2);}
+.chip b{color:var(--ok);}
+
+/* notice */
+.notice{display:none;background:rgba(255,201,71,.06);border:1px solid rgba(255,201,71,.22);border-radius:16px;padding:14px 18px;font-size:.8rem;color:var(--muted2);line-height:1.7;margin-bottom:14px;animation:fu .3s ease;}
+.notice.show{display:flex;align-items:center;gap:10px;}
+.notice strong{color:var(--warn);}
+
+/* card */
+.card{background:var(--s1);border:1px solid var(--b1);border-radius:20px;padding:24px;margin-bottom:14px;transition:border-color .3s;}
+.card:hover{border-color:var(--b2);}
+.card-title{font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:6px;}
+
+/* inputs */
+.row{display:flex;gap:10px;flex-wrap:wrap;}
+.field{flex:1;min-width:200px;background:var(--s2);border:1px solid var(--b2);color:var(--text);padding:12px 15px;border-radius:12px;font-size:.88rem;font-family:'Cairo',sans-serif;outline:none;transition:border-color .2s,box-shadow .2s;direction:ltr;}
+.field:focus{border-color:var(--tk);box-shadow:0 0 0 3px rgba(254,44,85,.12);}
+.field::placeholder{color:var(--muted);}
+.field.err{border-color:var(--tk)!important;animation:shake .3s ease;}
+.field-full{width:100%;min-width:unset;}
+
+/* buttons */
+.btn{padding:12px 20px;border-radius:12px;font-weight:700;font-size:.87rem;cursor:pointer;border:none;font-family:'Cairo',sans-serif;transition:all .2s;display:inline-flex;align-items:center;gap:7px;white-space:nowrap;}
+.btn-main{background:linear-gradient(135deg,var(--tk),#c01c3e);color:#fff;box-shadow:0 4px 22px rgba(254,44,85,.35);}
+.btn-main:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 28px rgba(254,44,85,.5);}
+.btn-main:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+.btn-ghost{background:transparent;color:var(--muted2);border:1px solid var(--b2);}
+.btn-ghost:hover{color:var(--text);border-color:rgba(255,255,255,.25);}
+.btn-sm{padding:9px 16px;font-size:.8rem;border-radius:10px;}
+.btn-full{width:100%;justify-content:center;}
+
+/* overlay */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(8px);z-index:200;display:none;align-items:flex-start;justify-content:center;padding:24px 16px;overflow-y:auto;}
+.overlay.open{display:flex;animation:fadeIn .2s ease;}
+.panel{background:var(--s1);border:1px solid var(--b2);border-radius:24px;padding:30px;width:min(580px,100%);position:relative;animation:slideUp .25s ease;margin:auto;}
+.panel-close{position:absolute;top:16px;left:16px;background:var(--s3);border:1px solid var(--b1);border-radius:9px;width:32px;height:32px;cursor:pointer;color:var(--muted2);font-size:1rem;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.panel-close:hover{color:var(--text);}
+.panel h2{font-size:1.1rem;font-weight:900;margin-bottom:4px;}
+.panel .sub{font-size:.78rem;color:var(--muted2);margin-bottom:24px;line-height:1.65;}
+
+/* accordion */
+.acc{border:1px solid var(--b1);border-radius:14px;margin-bottom:10px;overflow:hidden;}
+.acc-head{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;cursor:pointer;background:var(--s2);user-select:none;transition:background .2s;}
+.acc-head:hover{background:var(--s3);}
+.acc-head-left{display:flex;align-items:center;gap:8px;font-weight:700;font-size:.86rem;}
+.acc-badge{font-size:.67rem;padding:2px 8px;border-radius:20px;font-weight:700;}
+.acc-badge.ok{background:rgba(0,229,160,.12);color:var(--ok);border:1px solid rgba(0,229,160,.2);}
+.acc-badge.bad{background:rgba(254,44,85,.12);color:var(--tk);border:1px solid rgba(254,44,85,.25);}
+.acc-badge.na{background:rgba(90,96,122,.15);color:var(--muted2);border:1px solid var(--b1);}
+.acc-arrow{width:20px;height:20px;background:var(--s3);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:.72rem;color:var(--muted2);transition:transform .25s;}
+.acc.open .acc-arrow{transform:rotate(180deg);}
+.acc-body{padding:0 16px;max-height:0;overflow:hidden;transition:max-height .3s ease,padding .3s;}
+.acc.open .acc-body{max-height:700px;padding:16px 16px 18px;}
+
+/* form */
+.fg{margin-bottom:14px;}
+.flabel{font-size:.74rem;font-weight:700;color:var(--muted2);margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;}
+.flabel a{color:var(--drop);font-size:.7rem;text-decoration:none;}
+.flabel a:hover{text-decoration:underline;}
+.hint{font-size:.71rem;color:var(--muted);margin-top:5px;padding:7px 11px;background:rgba(255,255,255,.03);border-radius:8px;border-right:3px solid var(--b2);line-height:1.55;}
+.hint strong{color:var(--muted2);}
+
+/* slider */
+.slider-wrap{display:flex;align-items:center;gap:12px;}
+.slider{flex:1;-webkit-appearance:none;appearance:none;height:5px;border-radius:99px;outline:none;background:var(--s3);cursor:pointer;}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:var(--tk);border:2px solid #fff2;box-shadow:0 0 10px rgba(254,44,85,.4);cursor:pointer;transition:transform .15s;}
+.slider::-webkit-slider-thumb:hover{transform:scale(1.2);}
+.slider-val{font-family:'JetBrains Mono',monospace;font-size:.9rem;color:var(--tk);font-weight:700;min-width:46px;text-align:center;}
+
+/* keys textarea */
+.keys-area{width:100%;background:var(--s3);border:1px solid var(--b2);color:var(--text);padding:10px 12px;border-radius:10px;font-size:.77rem;font-family:'JetBrains Mono',monospace;resize:vertical;min-height:65px;outline:none;direction:ltr;transition:border-color .2s;}
+.keys-area:focus{border-color:var(--tk);}
+
+/* quota status */
+.quota-item{display:flex;align-items:center;justify-content:space-between;background:var(--s3);border-radius:8px;padding:8px 12px;font-size:.74rem;}
+.quota-item + .quota-item{margin-top:5px;}
+.quota-item .ki{font-family:'JetBrains Mono',monospace;color:var(--muted2);}
+.quota-item .ks{font-weight:700;}
+
+.save-row{display:flex;justify-content:flex-end;gap:9px;margin-top:20px;padding-top:16px;border-top:1px solid var(--b1);}
+
+/* progress */
+.prog-wrap{display:none;}
+.prog-wrap.show{display:block;animation:fu .3s ease;}
+.prog-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.prog-lbl{font-size:.88rem;font-weight:700;display:flex;align-items:center;gap:8px;}
+.spinner{width:15px;height:15px;border-radius:50%;border:2px solid var(--b2);border-top-color:var(--tk);animation:spin .75s linear infinite;display:inline-block;flex-shrink:0;}
+.prog-frac{font-family:'JetBrains Mono',monospace;font-size:.82rem;color:var(--drop2);}
+.bar{background:var(--s3);border-radius:99px;height:6px;overflow:hidden;margin-bottom:16px;}
+.bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--tk),var(--tk2));transition:width .6s ease;width:0%;}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px;}
+.stat{background:var(--s2);border-radius:12px;padding:10px;text-align:center;}
+.stat-n{font-family:'JetBrains Mono',monospace;font-size:1.3rem;font-weight:700;}
+.stat-n.blue{color:var(--drop2);}
+.stat-n.green{color:var(--ok);}
+.stat-n.red{color:var(--tk);}
+.stat-n.warn{color:var(--warn);}
+.stat-l{font-size:.66rem;color:var(--muted2);margin-top:1px;}
+.source-badge{font-size:.7rem;padding:3px 8px;border-radius:6px;font-weight:700;margin-right:6px;}
+.src-rapid{background:rgba(0,97,255,.15);color:var(--drop2);}
+.src-apify{background:rgba(0,229,160,.12);color:var(--ok);}
+.src-scraper{background:rgba(255,201,71,.12);color:var(--warn);}
+.cur{font-size:.74rem;color:var(--muted2);padding:7px 12px;background:var(--s2);border-radius:9px;display:none;font-family:'JetBrains Mono',monospace;direction:ltr;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cur.show{display:block;}
+
+/* log */
+.log-wrap{display:none;animation:fu .3s ease;}
+.log-wrap.show{display:block;}
+.log-head{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--b1);font-size:.73rem;color:var(--muted);}
+.log-body{padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:.7rem;line-height:1.9;max-height:230px;overflow-y:auto;color:var(--muted2);direction:ltr;text-align:left;}
+.log-body::-webkit-scrollbar{width:3px;}
+.log-body::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px;}
+.ll.s{color:var(--ok);}
+.ll.e{color:var(--err);}
+.ll.i{color:var(--drop2);}
+.ll.w{color:var(--warn);}
+
+/* done */
+.done{display:none;background:linear-gradient(135deg,rgba(0,229,160,.07),rgba(0,229,160,.03));border:1px solid rgba(0,229,160,.22);border-radius:16px;padding:20px 24px;align-items:center;gap:16px;animation:fu .4s ease;margin-top:14px;}
+.done.show{display:flex;}
+.done-icon{font-size:2rem;flex-shrink:0;}
+.done-text h3{font-size:.98rem;color:var(--ok);margin-bottom:3px;}
+.done-text p{font-size:.78rem;color:var(--muted2);}
+
+@keyframes fd{from{opacity:0;transform:translateY(-16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+</style>
+</head>
+<body>
+<div class="blob b1"></div>
+<div class="blob b2"></div>
+
+<!-- ══ SETTINGS OVERLAY ══ -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeCfg()">
+<div class="panel">
+  <button class="panel-close" onclick="closeCfg()">✕</button>
+  <h2>⚙️ الإعدادات</h2>
+  <p class="sub">المفاتيح محفوظة في المتصفح محلياً على جهازك فقط.</p>
+
+  <!-- RapidAPI -->
+  <div class="acc open" id="acc-rapid">
+    <div class="acc-head" onclick="toggleAcc('acc-rapid')">
+      <div class="acc-head-left">🔑 مفاتيح RapidAPI <span class="acc-badge na" id="badgeRapid">غير محفوظ</span></div>
+      <div class="acc-arrow">▾</div>
+    </div>
+    <div class="acc-body">
+      <div class="fg">
+        <div class="flabel">المفتاح الرئيسي (X-RapidAPI-Key) <a href="https://rapidapi.com/tikhub-tikhub-default/api/tiktok-video-no-watermark2" target="_blank">احصل عليه ↗</a></div>
+        <input class="field field-full" type="password" id="cfg_mainkey" placeholder="acac63fc…cff4">
+        <div class="hint">RapidAPI → My Apps → Default App → X-RapidAPI-Key</div>
+      </div>
+      <div class="fg">
+        <div class="flabel">مفاتيح إضافية (اختياري — كل مفتاح في سطر)</div>
+        <textarea class="keys-area" id="cfg_extrakeys" placeholder="key2&#10;key3" rows="3"></textarea>
+        <div class="hint">كل مفتاح = 500 req/شهر مجاناً — 3 providers × المفاتيح = quota ضخمة</div>
+      </div>
+      <div class="fg">
+        <div class="flabel">📊 حالة المفاتيح</div>
+        <div id="quotaStatus"></div>
+        <button class="btn btn-ghost btn-sm btn-full" style="margin-top:8px" onclick="checkAllQuotas()">🔄 فحص الـ Quota</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Apify -->
+  <div class="acc" id="acc-apify">
+    <div class="acc-head" onclick="toggleAcc('acc-apify')">
+      <div class="acc-head-left">🕷️ Apify Token <small style="font-weight:400;color:var(--muted);font-size:.68rem;">fallback تاني</small> <span class="acc-badge na" id="badgeApify">اختياري</span></div>
+      <div class="acc-arrow">▾</div>
+    </div>
+    <div class="acc-body">
+      <div class="fg">
+        <div class="flabel">Apify API Token <a href="https://console.apify.com/settings/integrations" target="_blank">احصل عليه ↗</a></div>
+        <input class="field field-full" type="password" id="cfg_apify" placeholder="apify_api_xxxxxxxxxxxx">
+        <div class="hint">apify.com مجاناً ← Settings ← Integrations ← API Token<br><strong>$5 credit/شهر</strong> مجاناً = ~1000 فيديو كـ fallback</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ScraperAPI -->
+  <div class="acc" id="acc-scraper">
+    <div class="acc-head" onclick="toggleAcc('acc-scraper')">
+      <div class="acc-head-left">🔧 ScraperAPI Key <small style="font-weight:400;color:var(--muted);font-size:.68rem;">fallback ثالث</small> <span class="acc-badge na" id="badgeScraper">اختياري</span></div>
+      <div class="acc-arrow">▾</div>
+    </div>
+    <div class="acc-body">
+      <div class="fg">
+        <div class="flabel">ScraperAPI Key <a href="https://www.scraperapi.com/" target="_blank">احصل عليه ↗</a></div>
+        <input class="field field-full" type="password" id="cfg_scraper" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+        <div class="hint">scraperapi.com مجاناً ← Dashboard ← API Key<br><strong>1,000 req/شهر</strong> مجاناً = fallback ثالث</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dropbox -->
+  <div class="acc open" id="acc-drop">
+    <div class="acc-head" onclick="toggleAcc('acc-drop')">
+      <div class="acc-head-left">📦 إعدادات Dropbox <span class="acc-badge na" id="badgeDrop">غير متصل</span></div>
+      <div class="acc-arrow">▾</div>
+    </div>
+    <div class="acc-body">
+      <div class="fg">
+        <div class="flabel">App Key (Client ID) <a href="https://www.dropbox.com/developers/apps" target="_blank">أنشئ App ↗</a></div>
+        <input class="field field-full" type="text" id="cfg_appkey" placeholder="jyu5031v2rkzfr4" dir="ltr">
+        <div class="hint">Dropbox App Console → Settings → App key</div>
+      </div>
+      <div class="fg">
+        <div class="flabel">App Secret (Client Secret)</div>
+        <input class="field field-full" type="password" id="cfg_appsecret" placeholder="ni1uvt1l…z3cw">
+        <div class="hint">Dropbox App Console → Settings → App secret</div>
+      </div>
+      <div class="fg">
+        <div class="flabel">Refresh Token الدائم</div>
+        <input class="field field-full" type="password" id="cfg_refresh" placeholder="sl.u.AGa***-v6A">
+      </div>
+      <button class="btn btn-ghost btn-sm btn-full" style="margin-bottom:14px" onclick="generateRefreshToken()">🔑 إنشاء Refresh Token تلقائياً</button>
+      <div class="fg">
+        <div class="flabel">مجلد الحفظ على Dropbox</div>
+        <input class="field field-full" type="text" id="cfg_folder" value="/videos" dir="ltr">
+      </div>
+    </div>
+  </div>
+
+  <!-- Duration filter -->
+  <div class="acc open" id="acc-dur">
+    <div class="acc-head" onclick="toggleAcc('acc-dur')">
+      <div class="acc-head-left">⏱️ فلتر المدة <span class="acc-badge ok" id="badgeDur">شغال</span></div>
+      <div class="acc-arrow">▾</div>
+    </div>
+    <div class="acc-body">
+      <div class="flabel">الحد الأقصى للمدة (ثانية)</div>
+      <div class="slider-wrap" style="margin-bottom:6px;">
+        <input class="slider" type="range" id="cfg_dur" min="10" max="600" value="120"
+          oninput="durVal.textContent=this.value+'s';updateDurHint(this.value)">
+        <div class="slider-val" id="durVal">120s</div>
+      </div>
+      <div class="hint">الإعداد الحالي: أقل من <strong id="durHint">دقيقتان</strong> — الفيديوهات الأطول تُتخطى تلقائياً</div>
+    </div>
+  </div>
+
+  <div class="save-row">
+    <button class="btn btn-ghost btn-sm" onclick="closeCfg()">إلغاء</button>
+    <button class="btn btn-main btn-sm" onclick="saveSettings()">💾 حفظ جميع الإعدادات</button>
+  </div>
+</div>
+</div>
+
+<!-- ══ MAIN ══ -->
+<div class="wrap">
+  <nav>
+    <div class="logo">
+      <div class="logo-icon">🎵</div>
+      <div class="logo-name">TikSave<sup>Pro</sup></div>
+    </div>
+    <button class="btn-cfg" onclick="openCfg()">
+      <div class="cfg-dot" id="cfgDot"></div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+      الإعدادات
+    </button>
+  </nav>
+
+  <div class="hero">
+    <h1>حمّل فيديوهاتك من<br><em>TikTok</em> إلى Dropbox</h1>
+    <p>أدخل رابط بروفايلك — يجلب فيديوهاتك القصيرة بدون علامة مائية<br>ويرفعها مباشرة على Dropbox مع تخطي المكرر تلقائياً.</p>
+    <div class="chips">
+      <div class="chip"><b>✓</b> بدون علامة مائية</div>
+      <div class="chip"><b>✓</b> بدون تكرار</div>
+      <div class="chip"><b>✓</b> 3 مصادر مجانية</div>
+      <div class="chip"><b>✓</b> Dropbox تلقائي</div>
+    </div>
+  </div>
+
+  <div class="notice" id="notice">
+    <span>⚠️</span>
+    <span><strong>الإعدادات ناقصة</strong> — اضغط "الإعدادات" وأدخل مفاتيح RapidAPI وبيانات Dropbox.</span>
+  </div>
+
+  <div class="card" style="animation:fu .4s ease .1s both;">
+    <div class="card-title">🔗 رابط البروفايل</div>
+    <div class="row">
+      <input class="field" type="text" id="profileUrl" placeholder="https://www.tiktok.com/@yourusername">
+      <button class="btn btn-main" id="startBtn" onclick="startProcess()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        ابدأ
+      </button>
+      <button class="btn btn-ghost" id="stopBtn" onclick="stopProcess()" style="display:none;">⏹ إيقاف</button>
+    </div>
+  </div>
+
+  <div class="card prog-wrap" id="progCard">
+    <div class="prog-top">
+      <div class="prog-lbl">
+        <div class="spinner"></div>
+        <span id="srcBadge"></span>
+        <span id="progLbl">جاري المعالجة…</span>
+      </div>
+      <div class="prog-frac"><span id="doneN">0</span> / <span id="totalN">0</span></div>
+    </div>
+    <div class="bar"><div class="bar-fill" id="barFill"></div></div>
+    <div class="stats">
+      <div class="stat"><div class="stat-n blue"  id="sTotal">0</div><div class="stat-l">إجمالي</div></div>
+      <div class="stat"><div class="stat-n green" id="sUp">0</div><div class="stat-l">رُفع ✓</div></div>
+      <div class="stat"><div class="stat-n warn"  id="sSkip">0</div><div class="stat-l">مكرر ⟳</div></div>
+      <div class="stat"><div class="stat-n red"   id="sFail">0</div><div class="stat-l">فشل ✗</div></div>
+    </div>
+    <div class="cur" id="curFile"></div>
+  </div>
+
+  <div class="card log-wrap" id="logCard">
+    <div class="log-head">
+      <span>📋 السجل</span>
+      <span id="logCnt" style="font-family:'JetBrains Mono',monospace;font-size:.72rem;">0</span>
+    </div>
+    <div class="log-body" id="logBody"></div>
+  </div>
+
+  <div class="done" id="doneEl">
+    <div class="done-icon">🎉</div>
+    <div class="done-text">
+      <h3>اكتملت العملية!</h3>
+      <p id="doneMsg"></p>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════
+   CONFIG
+════════════════════════════════════════ */
+const CFG = 'tiksave_v3';
+function load(){ try{ return JSON.parse(localStorage.getItem(CFG)||'{}'); }catch{ return {}; } }
+function save(o){ localStorage.setItem(CFG, JSON.stringify(o)); }
+
+function openCfg(){
+  const c = load();
+  $('cfg_mainkey').value   = c.mainKey    || '';
+  $('cfg_extrakeys').value = (c.extraKeys||[]).join('\n');
+  $('cfg_apify').value     = c.apifyToken || '';
+  $('cfg_scraper').value   = c.scraperKey || '';
+  $('cfg_appkey').value    = c.appKey     || '';
+  $('cfg_appsecret').value = c.appSecret  || '';
+  $('cfg_refresh').value   = c.refresh    || '';
+  $('cfg_folder').value    = c.folder     || '/videos';
+  const dur = c.maxDur || 120;
+  $('cfg_dur').value = dur;
+  $('durVal').textContent = dur + 's';
+  updateDurHint(dur);
+  updateBadges(c);
+  $('overlay').classList.add('open');
+}
+function closeCfg(){ $('overlay').classList.remove('open'); }
+
+function saveSettings(){
+  const c = {
+    mainKey:    $('cfg_mainkey').value.trim(),
+    extraKeys:  $('cfg_extrakeys').value.trim().split('\n').map(s=>s.trim()).filter(Boolean),
+    apifyToken: $('cfg_apify').value.trim(),
+    scraperKey: $('cfg_scraper').value.trim(),
+    appKey:     $('cfg_appkey').value.trim(),
+    appSecret:  $('cfg_appsecret').value.trim(),
+    refresh:    $('cfg_refresh').value.trim(),
+    folder:     $('cfg_folder').value.trim() || '/videos',
+    maxDur:     parseInt($('cfg_dur').value) || 120,
+  };
+  save(c);
+  updateBadges(c);
+  updateNavDot(c);
+  checkNotice(c);
+  closeCfg();
+}
+
+function updateBadges(c){
+  setBadge('badgeRapid', !!c.mainKey, c.mainKey ? '✓ محفوظ' : 'غير محفوظ');
+  const dropOk = c.appKey && c.appSecret && c.refresh;
+  setBadge('badgeDrop', !!dropOk, dropOk ? '✓ متصل' : 'غير متصل');
+  setBadgeOpt('badgeApify',   !!c.apifyToken,  c.apifyToken  ? '✓ محفوظ' : 'اختياري');
+  setBadgeOpt('badgeScraper', !!c.scraperKey,  c.scraperKey  ? '✓ محفوظ' : 'اختياري');
+}
+function setBadge(id, ok, txt){
+  const el = $(id); if(!el) return;
+  el.className = 'acc-badge ' + (ok ? 'ok' : 'bad');
+  el.textContent = txt;
+}
+function setBadgeOpt(id, ok, txt){
+  const el = $(id); if(!el) return;
+  el.className = 'acc-badge ' + (ok ? 'ok' : 'na');
+  el.textContent = txt;
+}
+function updateNavDot(c){
+  const ok = c.mainKey && c.appKey && c.appSecret && c.refresh;
+  $('cfgDot').className = 'cfg-dot ' + (ok ? 'ready' : c.mainKey ? 'partial' : '');
+}
+function checkNotice(c){
+  const ok = c.mainKey && c.appKey && c.appSecret && c.refresh;
+  $('notice').classList.toggle('show', !ok);
+}
+function updateDurHint(s){
+  s = parseInt(s);
+  const m = Math.floor(s/60), sec = s%60;
+  $('durHint').textContent = `${m} دقيقة${sec ? ' و'+sec+' ثانية' : ''}`;
+}
+function toggleAcc(id){ $(id).classList.toggle('open'); }
+function $(id){ return document.getElementById(id); }
+
+/* ════════════════════════════════════════
+   DROPBOX OAUTH
+════════════════════════════════════════ */
+async function generateRefreshToken(){
+  const appKey    = $('cfg_appkey').value.trim();
+  const appSecret = $('cfg_appsecret').value.trim();
+  if(!appKey || !appSecret){ alert('أدخل App Key و App Secret أولاً'); return; }
+  const redirectUri = window.location.origin + '/auth-callback';
+  const authUrl = `https://www.dropbox.com/oauth2/authorize?response_type=code&client_id=${appKey}&redirect_uri=${encodeURIComponent(redirectUri)}&token_access_type=offline`;
+  window.open(authUrl, '_blank');
+  const code = prompt('بعد الموافقة على Dropbox، انسخ الكود من الرابط (code=XXXX) والصقه هنا:','');
+  if(!code?.trim()){ alert('تم إلغاء العملية'); return; }
+  try{
+    const r = await fetch('/api/token',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({app_key:appKey,app_secret:appSecret,code:code.trim(),redirect_uri:redirectUri})});
+    const d = await r.json();
+    if(d.refresh_token){ $('cfg_refresh').value = d.refresh_token; alert('✅ تم الحصول على Refresh Token!'); }
+    else alert('خطأ: '+(d.error||JSON.stringify(d)));
+  }catch(e){ alert('خطأ: '+e.message); }
+}
+
+/* ════════════════════════════════════════
+   STATE
+════════════════════════════════════════ */
+let running=false, stopped=false;
+let allKeys=[], keyIndex=0;
+let currentSource=0; // 0=rapid, 1=apify, 2=scraper
+const urlCache={};   // videoId → download URL (in-session cache)
+
+function getKey(){
+  if(!allKeys.length) return null;
+  return allKeys[keyIndex++ % allKeys.length];
+}
+
+/* ════════════════════════════════════════
+   LOGGING
+════════════════════════════════════════ */
+function log(msg, cls=''){
+  const body = $('logBody');
+  const d = document.createElement('div');
+  d.className='ll '+cls; d.textContent=msg;
+  body.appendChild(d);
+  body.scrollTop=body.scrollHeight;
+  $('logCnt').textContent=body.children.length;
+}
+function resetLog(){ $('logBody').innerHTML=''; $('logCnt').textContent='0'; }
+
+/* ════════════════════════════════════════
+   SOURCE BADGE
+════════════════════════════════════════ */
+function setSourceBadge(src){
+  const labels={rapid:['RapidAPI','src-rapid'],apify:['Apify','src-apify'],scraper:['ScraperAPI','src-scraper']};
+  const [txt,cls]=labels[src]||['',''];
+  $('srcBadge').innerHTML = txt ? `<span class="source-badge ${cls}">${txt}</span>` : '';
+}
+
+/* ════════════════════════════════════════
+   API: FETCH PROFILE VIDEOS
+   Priority: RapidAPI → Apify → ScraperAPI
+════════════════════════════════════════ */
+async function fetchPage(username, cursor){
+  const c = load();
+
+  // ── 0: RapidAPI ──────────────────────────────────
+  if(currentSource===0){
+    const tried=new Set();
+    while(tried.size < allKeys.length){
+      const key=getKey();
+      if(tried.has(key)){keyIndex++;continue;}
+      tried.add(key);
+      const r = await fetch(
+        `/api/profile?username=${enc(username)}&rapid_key=${enc(key)}&max_dur=${c.maxDur||120}&cursor=${cursor}`
+      );
+      if(r.status===429){keyIndex++;continue;}
+      const d=await r.json();
+      if(d.error) throw new Error(d.error);
+      setSourceBadge('rapid');
+      return d;
+    }
+    // RapidAPI exhausted
+    if(c.apifyToken){
+      log('⚠️ RapidAPI quota خلص — التحويل لـ Apify…','w');
+      currentSource=1;
+    } else if(c.scraperKey){
+      log('⚠️ RapidAPI quota خلص — التحويل لـ ScraperAPI…','w');
+      currentSource=2;
+    } else {
+      throw new Error('كل مفاتيح RapidAPI خلصت quota — أضف Apify أو ScraperAPI في الإعدادات');
+    }
+  }
+
+  // ── 1: Apify ─────────────────────────────────────
+  if(currentSource===1){
+    try{
+      log('🕷️ Apify: جاري الجلب (30-60 ثانية)…','i');
+      const r = await fetch(
+        `/api/profile?source=apify&username=${enc(username)}&apify_token=${enc(load().apifyToken)}&max_dur=${c.maxDur||120}&cursor=0`
+      );
+      if(r.status===402||r.status===429){
+        log('⚠️ Apify quota خلص — التحويل لـ ScraperAPI…','w');
+        currentSource=2;
+      } else {
+        if(!r.ok){const d=await r.json().catch(()=>({}));throw new Error(d.error||`Apify ${r.status}`);}
+        const d=await r.json();
+        log(`🕷️ Apify: جلب ${d.videos?.length||0} فيديو`,'s');
+        setSourceBadge('apify');
+        return {...d, has_more:false};
+      }
+    }catch(e){
+      if(load().scraperKey){log('⚠️ Apify فشل — التحويل لـ ScraperAPI…','w');currentSource=2;}
+      else throw e;
+    }
+  }
+
+  // ── 2: ScraperAPI ────────────────────────────────
+  if(currentSource===2){
+    const sk=load().scraperKey;
+    if(!sk) throw new Error('ScraperAPI key غير موجود');
+    log('🔧 ScraperAPI: جاري الجلب…','i');
+    const r=await fetch(
+      `/api/profile?source=scraper&username=${enc(username)}&scraper_key=${enc(sk)}&max_dur=${c.maxDur||120}&cursor=${cursor}`
+    );
+    if(r.status===429) throw new Error('ScraperAPI quota خلص — انتظر الشهر الجاي');
+    if(!r.ok){const d=await r.json().catch(()=>({}));throw new Error(d.error||`ScraperAPI ${r.status}`);}
+    const d=await r.json();
+    log(`🔧 ScraperAPI: جلب ${d.videos?.length||0} فيديو`,'s');
+    setSourceBadge('scraper');
+    return d;
+  }
+
+  throw new Error('مفيش source متاح');
+}
+
+/* ════════════════════════════════════════
+   API: GET DOWNLOAD URL (with cache)
+   Falls back across all 3 RapidAPI providers
+════════════════════════════════════════ */
+async function getDownloadUrl(videoId){
+  if(urlCache[videoId]) return urlCache[videoId];
+  const tried=new Set();
+  while(tried.size < allKeys.length){
+    const key=getKey();
+    if(tried.has(key)){keyIndex++;continue;}
+    tried.add(key);
+    const r=await fetch(`/api/download?video_id=${enc(videoId)}&rapid_key=${enc(key)}`);
+    if(r.status===429){log(`  ⚠️ key quota خلص — التالي…`,'w');keyIndex++;continue;}
+    const d=await r.json();
+    if(d.error==='all_quota_exceeded'){keyIndex++;continue;}
+    if(d.error) throw new Error(d.error);
+    urlCache[videoId]=d.url;
+    return d.url;
+  }
+  throw new Error('كل المفاتيح quota خلصت');
+}
+
+/* ════════════════════════════════════════
+   API: UPLOAD TO DROPBOX
+   Server checks duplicate before uploading
+════════════════════════════════════════ */
+async function uploadVideo(videoUrl, filename){
+  const c=load();
+  const r=await fetch('/api/upload',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      video_url:    videoUrl,
+      filename,
+      drop_folder:  c.folder    || '/videos',
+      app_key:      c.appKey    || '',
+      app_secret:   c.appSecret || '',
+      refresh_token:c.refresh   || '',
+    })
+  });
+  const d=await r.json();
+  if(d.error) throw new Error(d.error);
+  return d; // { ok, skipped, path, reason? }
+}
+
+/* ════════════════════════════════════════
+   MAIN PROCESS
+════════════════════════════════════════ */
+function extractUsername(url){
+  const m=url.match(/@([\w.]+)/);
+  return m?m[1]:url.replace(/.*tiktok\.com\//,'').replace(/\//,'');
+}
+function enc(s){ return encodeURIComponent(s||''); }
+
+async function startProcess(){
+  const c=load();
+  if(!c.mainKey||!c.appKey||!c.appSecret||!c.refresh){ openCfg(); return; }
+  const urlVal=$('profileUrl').value.trim();
+  if(!urlVal.includes('tiktok')){
+    $('profileUrl').classList.add('err');
+    setTimeout(()=>$('profileUrl').classList.remove('err'),600);
+    return;
+  }
+
+  // Init state
+  allKeys=[c.mainKey,...(c.extraKeys||[])].filter(Boolean);
+  keyIndex=0; currentSource=0;
+  running=true; stopped=false;
+  resetLog();
+  Object.keys(urlCache).forEach(k=>delete urlCache[k]);
+
+  // UI
+  $('startBtn').disabled=true;
+  $('stopBtn').style.display='inline-flex';
+  $('progCard').classList.add('show');
+  $('logCard').classList.add('show');
+  $('doneEl').classList.remove('show');
+  $('barFill').style.width='0%';
+  ['sTotal','sUp','sSkip','sFail','doneN','totalN'].forEach(id=>$(id).textContent='0');
+
+  const username=extractUsername(urlVal);
+  log(`👤 بروفايل: @${username}`,'i');
+
+  try{
+    // ── 1. جمع كل الفيديوهات ──────────────────────
+    const videos=[];
+    let cursor=0, hasMore=true, page=0;
+    while(hasMore && !stopped){
+      page++;
+      log(`  صفحة ${page} (cursor=${cursor})…`);
+      const res=await fetchPage(username, cursor);
+      videos.push(...(res.videos||[]));
+      hasMore=res.has_more;
+      cursor=res.cursor||0;
+      if(page>=50||!hasMore) break;
+    }
+    log(`📋 ${videos.length} فيديو مناسب (≤${c.maxDur||120}ث)`,'s');
+    if(!videos.length){ finish(0,0,0); return; }
+
+    $('sTotal').textContent=$('totalN').textContent=videos.length;
+
+    // ── 2. تحميل ورفع كل فيديو ───────────────────
+    let up=0, skip=0, fail=0;
+    for(let i=0;i<videos.length;i++){
+      if(stopped){log('⏹ تم الإيقاف.','w');break;}
+      const v=videos[i];
+      const lbl=`[${i+1}/${videos.length}] ${v.title.slice(0,50)}`;
+      const cf=$('curFile');
+      cf.textContent=lbl; cf.classList.add('show');
+      $('progLbl').textContent=`جاري المعالجة… (${i+1}/${videos.length})`;
+      log(`⬇️  ${lbl}`,'i');
+
+      try{
+        // Get download URL (from listing or API)
+        let dlUrl = v.play_url || '';
+        if(!dlUrl){
+          dlUrl=await getDownloadUrl(v.id);
+        }
+
+        // Upload (server checks duplicate automatically)
+        const res=await uploadVideo(dlUrl, `${v.id}.mp4`);
+
+        if(res.skipped){
+          skip++;
+          log(`  ⟳  مكرر (موجود مسبقاً): ${v.id}.mp4`,'w');
+          $('sSkip').textContent=skip;
+        } else {
+          up++;
+          log(`  ☁️  رُفع: ${v.id}.mp4`,'s');
+          $('sUp').textContent=up;
+        }
+      }catch(e){
+        fail++;
+        log(`  ❌ فشل: ${e.message}`,'e');
+        $('sFail').textContent=fail;
+      }
+
+      const pct=Math.round(((i+1)/videos.length)*100);
+      $('barFill').style.width=pct+'%';
+      $('doneN').textContent=i+1;
+    }
+    finish(up, skip, fail);
+
+  }catch(e){
+    log(`💥 ${e.message}`,'e');
+    finish(0,0,0);
+  }
+}
+
+function finish(up, skip, fail){
+  running=false;
+  $('startBtn').disabled=false;
+  $('stopBtn').style.display='none';
+  $('progLbl').textContent='اكتملت العملية';
+  $('curFile').classList.remove('show');
+  $('barFill').style.width='100%';
+  $('doneEl').classList.add('show');
+  $('doneMsg').textContent=
+    `رُفع ${up} فيديو ✓ | تخطي مكرر ${skip} ⟳ | فشل ${fail} ✗`;
+  log(`\n🎉 انتهى! رُفع: ${up} | مكرر: ${skip} | فشل: ${fail}`,'s');
+}
+
+function stopProcess(){ stopped=true; log('⏹ طلب إيقاف…','w'); }
+
+/* ════════════════════════════════════════
+   QUOTA CHECKER
+════════════════════════════════════════ */
+async function checkAllQuotas(){
+  const c=load();
+  const keys=[c.mainKey,...(c.extraKeys||[])].filter(Boolean);
+  const box=$('quotaStatus');
+  if(!keys.length){box.innerHTML='<div style="font-size:.74rem;color:var(--muted)">لا توجد مفاتيح محفوظة</div>';return;}
+  box.innerHTML=keys.map((k,i)=>`
+    <div class="quota-item" id="qs_${i}">
+      <span class="ki">${k.slice(0,16)}…</span>
+      <span class="ks" style="color:var(--warn)">⏳ جاري…</span>
+    </div>`).join('');
+  for(let i=0;i<keys.length;i++){
+    const k=keys[i];
+    const ks=document.querySelector(`#qs_${i} .ks`);
+    try{
+      const r=await fetch(`/api/profile?username=tiktok&rapid_key=${enc(k)}&max_dur=1&cursor=0`);
+      if(r.status===429){ks.style.color='var(--err)';ks.textContent='❌ quota خلص';}
+      else if(r.ok){ks.style.color='var(--ok)';ks.textContent='✅ شغال';}
+      else{ks.style.color='var(--warn)';ks.textContent='⚠️ '+r.status;}
+    }catch{ks.style.color='var(--err)';ks.textContent='❌ خطأ';}
+  }
+}
+
+/* ════════════════════════════════════════
+   INIT
+════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded',()=>{
+  $('cfg_dur').addEventListener('input',function(){
+    $('durVal').textContent=this.value+'s';
+    updateDurHint(this.value);
+  });
+  const c=load();
+  updateNavDot(c);
+  checkNotice(c);
+  if(c.maxDur){
+    $('cfg_dur').value=c.maxDur;
+    $('durVal').textContent=c.maxDur+'s';
+    updateDurHint(c.maxDur);
+  }
+});
+</script>
+</body>
+</html>
