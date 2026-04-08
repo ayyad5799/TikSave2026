@@ -1,0 +1,15 @@
+{
+  "functions": {
+    "api/upload.py":    { "maxDuration": 60 },
+    "api/profile.py":   { "maxDuration": 30 },
+    "api/storage.py":   { "maxDuration": 30 },
+    "api/test_keys.py": { "maxDuration": 30 },
+    "api/download.py":  { "maxDuration": 15 },
+    "api/token.py":     { "maxDuration": 15 },
+    "api/settings.py":  { "maxDuration": 15 }
+  },
+  "rewrites": [
+    { "source": "/auth-callback",    "destination": "/public/auth-callback.html" },
+    { "source": "/((?!api/).*)",     "destination": "/public/index.html" }
+  ]
+}
